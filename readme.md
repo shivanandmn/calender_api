@@ -7,3 +7,12 @@ https://medium.com/@jasjeet/easy-google-calendar-integration-with-python-550b9fd
 - create new folder `creds`, upload client secret after renaming it `client_secret.json`.
 - `example.env` shows sample env file to have token/secret keys
 - run `agent_call.py` file as it already has last 3 lines calling the gpt.
+
+- API cURL
+```bash
+curl --location 'http://127.0.0.1:8080/predict' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query":"Hi"
+}'
+```
