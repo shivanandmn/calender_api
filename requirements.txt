@@ -5,3 +5,4 @@ langchain
 python-dotenv
 langchain-openai
 langchainhub
+flask

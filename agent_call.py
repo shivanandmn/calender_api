@@ -1,6 +1,11 @@
 from langchain_core.tools import tool
 from service import CalenderService, to_timezone
 from datetime import datetime, timedelta
+from langchain import hub
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain_openai import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.memory.buffer import ConversationBufferMemory
 
 calender_service = CalenderService()
 
@@ -24,8 +29,8 @@ def get_free_slots():
     """Get Free slots list for booking appointment."""
     slots = calender_service.find_free_slots(
         business_hours={
-            "start": to_timezone(datetime(2024, 3, 16, 10, 0, 0)),
-            "end": to_timezone(datetime(2024, 3, 16, 22, 0, 0)),
+            "start": to_timezone(datetime(2024, 3, 19, 10, 0, 0)),
+            "end": to_timezone(datetime(2024, 3, 19, 22, 0, 0)),
         },
         appointment_duration=timedelta(minutes=30),
     )
@@ -48,10 +53,7 @@ def create_event(data):
 
 
 tools = [get_free_slots, create_event]
-from langchain import hub
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
+
 
 # Get the prompt to use - you can modify this!
 prompt = hub.pull("hwchase17/openai-tools-agent")
@@ -61,21 +63,20 @@ prompt.pretty_print()
 # Only certain models support this
 model = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0)
 
-consent_prompt = (
+PROMPT = (
     "You are assist to help salesman to book appointment of users."
     "Your task is to ask the user to book appointment. If the user says yes, then show the appointment slots to user, return the index number based on his choice from 0 to n"
     "After the slot is choosen, create event by calling relevent function, with choosen slot data"
+    "Datetime format should be ```%Y-%m-%d %H:%M:%S %Z``` in this format."
 )
 
-# prompt_template =
-from langchain.memory.buffer import ConversationBufferMemory
 
 conversation_memory = ConversationBufferMemory(
     memory_key="chat_history",
     max_len=200,
     return_messages=True,
 )
-prompt.messages[0].prompt = PromptTemplate(template=consent_prompt, input_variables=[])
+prompt.messages[0].prompt = PromptTemplate(template=PROMPT, input_variables=[])
 # Construct the OpenAI Tools agent
 agent = create_openai_tools_agent(model, tools, prompt)
 
@@ -83,7 +84,3 @@ agent = create_openai_tools_agent(model, tools, prompt)
 agent_executor = AgentExecutor(
     agent=agent, tools=tools, verbose=True, memory=conversation_memory
 )
-output = agent_executor.invoke({"input": "Hi"})
-output = agent_executor.invoke({"input": "Book appointment"})
-output = agent_executor.invoke({"input": "2nd"})
-print(output)
